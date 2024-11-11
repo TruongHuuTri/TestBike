@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+// BikeShopScreen.js
+import React, { useEffect, useState } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -10,18 +11,21 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import axios from 'axios';
+import { useSelector, useDispatch } from 'react-redux';
+import { setBikes } from '../redux/bikesSlice';
 
 export default function BikeShopScreen({ navigation }) {
-  const [bikes, setBikes] = useState([]);
+  const dispatch = useDispatch();
+  const bikes = useSelector((state) => state.bike.bikes);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
 
   useEffect(() => {
     axios
-      .get('https://671465c2690bf212c7615315.mockapi.io/api/Bikes')
+      .get('https://6731c1777aaf2a9aff11e3cd.mockapi.io/bike')
       .then((response) => {
-        setBikes(response.data);
+        dispatch(setBikes(response.data));
         setLoading(false);
       })
       .catch((error) => {
@@ -29,9 +33,9 @@ export default function BikeShopScreen({ navigation }) {
         setError('Failed to load bikes');
         setLoading(false);
       });
-  }, []);
+  }, [dispatch]);
 
-  //Phân loại xe
+  // Phân loại xe
   const filteredBikes =
     selectedCategory === 'All'
       ? bikes
@@ -55,7 +59,16 @@ export default function BikeShopScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}> The World's Best Bikes </Text>
+      <View style={styles.headerContainer}>
+        <Text style={styles.title}>The World's Best Bikes</Text>
+        {/* Add button */}
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate('AddBike')}
+        >
+          <Text style={styles.addButtonText}>Add</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.categoryContainer}>
         {['All', 'Roadbike', 'Mountain'].map((category) => (
           <TouchableOpacity
@@ -64,7 +77,8 @@ export default function BikeShopScreen({ navigation }) {
             style={[
               styles.categoryButton,
               selectedCategory === category && styles.selectedCategoryButton,
-            ]}>
+            ]}
+          >
             <Text>{category}</Text>
           </TouchableOpacity>
         ))}
@@ -74,15 +88,15 @@ export default function BikeShopScreen({ navigation }) {
       <FlatList
         numColumns={2}
         columnWrapperStyle={styles.row}
-        data={filteredBikes} // phân loại all
+        data={filteredBikes}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.bikeItem}>
             <TouchableOpacity
-              onPress={() => navigation.navigate('BikeDetail', { bike: item })}>
+              onPress={() => navigation.navigate('BikeDetail', { bike: item })}
+            >
               <TouchableOpacity style={styles.heartButton}>
-                <Text
-                  style={item.liked ? styles.heartLiked : styles.heartUnliked}>
+                <Text style={item.liked ? styles.heartLiked : styles.heartUnliked}>
                   {item.liked ? '❤️' : '🤍'}
                 </Text>
               </TouchableOpacity>
@@ -111,12 +125,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
     color: '#e53935',
-    textAlign: 'center',
+  },
+  addButton: {
+    backgroundColor: '#e53935',
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 16,
   },
   categoryContainer: {
     flexDirection: 'row',
@@ -132,11 +160,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     color: '#e53935',
     flex: 1,
-    alignItems: 'center', // Center button text
+    alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 5,
   },
-
   selectedCategoryButton: {
     backgroundColor: 'salmon',
     color: '#fff',
